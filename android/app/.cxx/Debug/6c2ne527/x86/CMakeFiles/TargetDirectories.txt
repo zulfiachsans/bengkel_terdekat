@@ -1,0 +1,2 @@
+D:/project/bengkel_terdekat/android/app/.cxx/Debug/6c2ne527/x86/CMakeFiles/edit_cache.dir
+D:/project/bengkel_terdekat/android/app/.cxx/Debug/6c2ne527/x86/CMakeFiles/rebuild_cache.dir
