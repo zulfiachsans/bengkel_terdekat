@@ -17,9 +17,6 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentPosition;
   LatLng? _selectedBengkel;
   String? _selectedBengkelName;
-  String? _selectedBengkelPhoto;
-  double? _selectedBengkelRating;
-  double? _selectedBengkelDistance;
   Set<Marker> _markers = {};
   final TextEditingController _searchController = TextEditingController();
 
@@ -68,21 +65,10 @@ class _MapScreenState extends State<MapScreen> {
           markerId: MarkerId(name),
           position: position,
           infoWindow: InfoWindow(title: name),
-          onTap: () async {
-            final photo = place['photos'] != null
-                ? place['photos'][0]['photo_reference']
-                : null;
-            final rating = place['rating'];
-            final distance = _calculateDistance(lat, lng);
-
+          onTap: () {
             setState(() {
               _selectedBengkel = position;
               _selectedBengkelName = name;
-              _selectedBengkelPhoto = photo != null
-                  ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photo&key=AIzaSyBAV_KvG9QbQP0tlpA213my_3fluqmqs1A'
-                  : null;
-              _selectedBengkelRating = rating;
-              _selectedBengkelDistance = distance;
             });
           },
         ));
@@ -97,19 +83,6 @@ class _MapScreenState extends State<MapScreen> {
         SnackBar(content: Text("Gagal memuat data bengkel. Coba lagi.")),
       );
     }
-  }
-
-  // Fungsi untuk menghitung jarak antara lokasi pengguna dan bengkel
-  double _calculateDistance(double lat, double lng) {
-    if (_currentPosition == null) return 0.0;
-
-    final distance = Geolocator.distanceBetween(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
-      lat,
-      lng,
-    );
-    return distance / 1000; // Convert to kilometers
   }
 
   // Membuka navigasi ke bengkel
@@ -204,23 +177,6 @@ class _MapScreenState extends State<MapScreen> {
                     Text(_selectedBengkelName ?? "",
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
-                    if (_selectedBengkelPhoto != null)
-                      Image.network(
-                        _selectedBengkelPhoto!,
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                      ),
-                    if (_selectedBengkelRating != null)
-                      Text(
-                        "Rating: ${_selectedBengkelRating}/5",
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    if (_selectedBengkelDistance != null)
-                      Text(
-                        "Jarak: ${_selectedBengkelDistance!.toStringAsFixed(2)} km",
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
                     const SizedBox(height: 8),
                     Text("Lihat petunjuk arah",
                         style: TextStyle(color: Colors.grey[600])),
