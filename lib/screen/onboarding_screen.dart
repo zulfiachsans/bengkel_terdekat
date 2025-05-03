@@ -1,3 +1,4 @@
+import 'package:bengkel_terdekat/screen/location_permission_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -105,15 +106,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   if (_currentIndex > 0)
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue,
+                        minimumSize: const Size(100, 50),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                          side: const BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       onPressed: _prevPage,
                       child: const Text('Sebelumnya'),
                     )
                   else
                     const SizedBox(width: 100), // biar rata tengah
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(100, 50),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
                     onPressed: () {
                       if (_currentIndex == _pages.length - 1) {
-                        // TODO: Navigasi ke halaman utama
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LocationPermissionScreen(),
+                          ),
+                        );
                       } else {
                         _nextPage();
                       }
