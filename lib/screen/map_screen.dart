@@ -17,8 +17,10 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentPosition;
   LatLng? _selectedBengkel;
   String? _selectedBengkelName;
+  double? _selectedBengkelDistance;
   Set<Marker> _markers = {};
   final TextEditingController _searchController = TextEditingController();
+  String _searchKeyword = "bengkel"; // Default pencarian adalah "bengkel"
 
   @override
   void initState() {
@@ -29,7 +31,8 @@ class _MapScreenState extends State<MapScreen> {
   // Fungsi untuk mendapatkan lokasi pengguna dan langsung load tempat terdekat
   Future<void> _initializeMap() async {
     await _getCurrentLocation();
-    await _loadNearbyPlaces("bengkel"); // langsung load bengkel terdekat
+    await _loadNearbyPlaces(
+        _searchKeyword); // langsung load tempat berdasarkan keyword
   }
 
   // Mendapatkan lokasi pengguna
@@ -44,7 +47,7 @@ class _MapScreenState extends State<MapScreen> {
     mapController.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
   }
 
-  // Fungsi untuk memuat bengkel terdekat
+  // Fungsi untuk memuat tempat terdekat berdasarkan keyword pencarian
   Future<void> _loadNearbyPlaces([String keyword = "bengkel"]) async {
     if (_currentPosition == null) return;
 
@@ -59,8 +62,9 @@ class _MapScreenState extends State<MapScreen> {
         final lng = place['geometry']['location']['lng'];
         final name = place['name'];
         final position = LatLng(lat, lng);
+        final distance = _calculateDistance(lat, lng);
 
-        // Menambahkan marker untuk setiap bengkel
+        // Menambahkan marker untuk setiap tempat yang ditemukan
         newMarkers.add(Marker(
           markerId: MarkerId(name),
           position: position,
@@ -69,6 +73,7 @@ class _MapScreenState extends State<MapScreen> {
             setState(() {
               _selectedBengkel = position;
               _selectedBengkelName = name;
+              _selectedBengkelDistance = distance;
             });
           },
         ));
@@ -80,9 +85,22 @@ class _MapScreenState extends State<MapScreen> {
     } catch (e) {
       print("Error fetching places: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal memuat data bengkel. Coba lagi.")),
+        SnackBar(content: Text("Gagal memuat data tempat. Coba lagi.")),
       );
     }
+  }
+
+  // Fungsi untuk menghitung jarak antara lokasi pengguna dan tempat
+  double _calculateDistance(double lat, double lng) {
+    if (_currentPosition == null) return 0.0;
+
+    final distance = Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      lat,
+      lng,
+    );
+    return distance / 1000; // Convert to kilometers
   }
 
   // Membuka navigasi ke bengkel
@@ -94,6 +112,15 @@ class _MapScreenState extends State<MapScreen> {
         await launchUrl(Uri.parse(url));
       }
     }
+  }
+
+  // Fungsi untuk menghapus pencarian dan kembali ke "bengkel"
+  void _clearSearch() {
+    setState(() {
+      _searchKeyword = "bengkel";
+      _searchController.clear();
+    });
+    _loadNearbyPlaces(_searchKeyword); // Kembali mencari bengkel terdekat
   }
 
   @override
@@ -136,22 +163,27 @@ class _MapScreenState extends State<MapScreen> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: "Cari bengkel...",
+                      decoration: InputDecoration(
+                        hintText: "Cari tempat...",
                         border: InputBorder.none,
                         icon: Icon(Icons.search),
                       ),
-                      onSubmitted: (value) => _loadNearbyPlaces(value),
+                      onSubmitted: (value) {
+                        setState(() {
+                          _searchKeyword = value;
+                        });
+                        _loadNearbyPlaces(
+                            _searchKeyword); // Cari berdasarkan keyword
+                      },
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () {
-                      final query = _searchController.text.trim();
-                      if (query.isNotEmpty) {
-                        _loadNearbyPlaces(query);
-                      }
-                    },
+                    icon: Icon(_searchKeyword == "bengkel"
+                        ? Icons.search
+                        : Icons.clear),
+                    onPressed: _searchKeyword == "bengkel"
+                        ? null
+                        : _clearSearch, // Tombol silang untuk kembali ke pencarian bengkel
                   )
                 ],
               ),
@@ -177,6 +209,11 @@ class _MapScreenState extends State<MapScreen> {
                     Text(_selectedBengkelName ?? "",
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
+                    if (_selectedBengkelDistance != null)
+                      Text(
+                        "Jarak: ${_selectedBengkelDistance!.toStringAsFixed(2)} km",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
                     const SizedBox(height: 8),
                     Text("Lihat petunjuk arah",
                         style: TextStyle(color: Colors.grey[600])),
